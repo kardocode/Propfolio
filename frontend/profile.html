@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Dashboard | Estato</title>
+    <meta name="description" content="Manage your real estate investments and track property values.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Profile-specific styles */
+        .profile-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .profile-header {
+            margin-bottom: 2rem;
+        }
+
+        .profile-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, var(--card-bg) 0%, #1a1a1a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+        }
+
+        .summary-card.profit::before {
+            background: var(--success);
+        }
+
+        .summary-card.loss::before {
+            background: var(--danger);
+        }
+
+        .summary-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .summary-change {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .summary-change.positive {
+            color: var(--success);
+        }
+
+        .summary-change.negative {
+            color: var(--danger);
+        }
+
+        /* Controls Section */
+        .controls-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.6rem 1rem;
+            background: #1a1a1a;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .filter-select:hover,
+        .filter-select:focus {
+            border-color: var(--primary);
+            background: var(--card-bg);
+        }
+
+        .btn-add-property {
+            background: var(--primary);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-property:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        /* Property List */
+        .property-view-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+
+        .view-btn {
+            background: #1a1a1a;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.5rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .view-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Property Cards */
+        .properties-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .property-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .property-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .property-header {
+            background: linear-gradient(135deg, var(--primary), #1e40af);
+            padding: 1rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .property-type-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .property-sold-badge {
+            background: var(--success);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .property-content {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .property-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .property-location {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .property-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .property-values {
+            background: #1a1a1a;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin: 1rem 0;
+        }
+
+        .value-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.7rem;
+            font-size: 0.9rem;
+        }
+
+        .value-row:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            padding-top: 0.7rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .value-positive {
+            color: var(--success);
+        }
+
+        .value-negative {
+            color: var(--danger);
+        }
+
+        .property-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: auto;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 0.6rem;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .btn-edit {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-sell {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-sell:hover {
+            background: #059669;
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        /* Property Table */
+        .properties-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        .properties-table.active {
+            display: table;
+        }
+
+        .properties-table th {
+            background: #1a1a1a;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .properties-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .properties-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .properties-table tr:hover {
+            background: #1a1a1a;
+        }
+
+        /* Modal */
+        .property-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .property-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .property-modal-content {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .property-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .property-modal-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-grid-2.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.7rem 1rem;
+            background: #1a1a1a;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            background: #252525;
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .btn-submit-form {
+            width: 100%;
+            padding: 0.9rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-submit-form:hover {
+            background: var(--primary-hover);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .profile-container {
+                padding: 1rem;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+            }
+
+            .filter-select,
+            .btn-add-property {
+                width: 100%;
+            }
+
+            .properties-container {
+                grid-template-columns: 1fr;
+            }
+
+            .property-details {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .property-modal-content {
+                width: 95%;
+                padding: 1.5rem;
+            }
+        }
+
+        /* Analytics Section Styles */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            min-height: 350px;
+        }
+
+        .chart-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <span class="logo-icon">🏢</span> Estato
+        </a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link" data-page="home">Home</a>
+            <a href="compare.html" class="nav-link" data-page="compare">Compare</a>
+            <a href="heatmap.html" class="nav-link" data-page="heatmap">Heatmap</a>
+            <a href="trends.html" class="nav-link" data-page="trends">Trends</a>
+            <a href="analytics.html" class="nav-link" data-page="analytics">Analytics</a>
+            <a href="insights.html" class="nav-link" data-page="insights">Insights</a>
+            <a href="profile.html" class="nav-link active" data-page="profile">Profile</a>
+        </nav>
+        <div class="nav-actions">
+            <div class="nav-avatar-container" id="user-profile">
+                <div class="nav-avatar" id="user-avatar">U</div>
+                <div class="profile-dropdown" id="profile-dropdown">
+                    <a href="profile.html" class="dropdown-item">📊 Dashboard</a>
+                    <a href="#" class="dropdown-item" id="logout-btn">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="profile-container">
+        <div class="profile-header">
+            <h1>📊 Portfolio Dashboard</h1>
+            <p style="color: var(--text-muted);">Track and manage your real estate investments</p>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-label">Total Investment</div>
+                <div class="summary-value">₹<span id="total-investment">0</span>L</div>
+                <div class="summary-change"><span id="investment-properties">0</span> properties</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Current Value</div>
+                <div class="summary-value">₹<span id="total-value">0</span>L</div>
+                <div class="summary-change">Market estimate</div>
+            </div>
+            <div class="summary-card profit" id="profit-card">
+                <div class="summary-label">Total Profit/Loss</div>
+                <div class="summary-value"><span id="total-profit">0</span>L</div>
+                <div class="summary-change positive" id="profit-change">↑ Positive</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Best Performer</div>
+                <div class="summary-value" style="font-size: 1.2rem;" id="best-property">-</div>
+                <div class="summary-change" id="best-profit">0%</div>
+            </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div class="analytics-grid" id="analytics-section" style="display:none;">
+            <div class="chart-card">
+                <h3>📈 Value Over Time <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">Purchase vs. Current</span></h3>
+                <div class="chart-container">
+                    <canvas id="valueHistoryChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>💰 Profit/Loss Analysis <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">By Property</span></h3>
+                <div class="chart-container">
+                    <canvas id="profitLossChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>🏗️ Portfolio Distribution <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">By Type</span></h3>
+                <div class="chart-container">
+                    <canvas id="distributionChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <h3>📍 Market Comparison <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">Price per Sq.Ft</span></h3>
+                <div class="chart-container">
+                    <canvas id="locationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <div class="filter-group">
+                <select class="filter-select" id="type-filter">
+                    <option value="">All Property Types</option>
+                    <option value="Apartment">Apartment</option>
+                    <option value="Independent House">Independent House</option>
+                    <option value="Villa">Villa</option>
+                    <option value="Plot">Plot</option>
+                </select>
+                <select class="filter-select" id="status-filter">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="sold">Sold</option>
+                </select>
+            </div>
+            <button class="btn-add-property" onclick="openPropertyModal()">+ Add Property</button>
+        </div>
+
+        <!-- Properties Container -->
+        <div id="properties-container" class="properties-container"></div>
+
+        <!-- Properties Table (hidden by default) -->
+        <table class="properties-table" id="properties-table">
+            <thead>
+                <tr>
+                    <th>Property</th>
+                    <th>Location</th>
+                    <th>Purchase Price</th>
+                    <th>Current Value</th>
+                    <th>Profit/Loss</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="empty-state">
+            <div class="empty-state-icon">📭</div>
+            <h3>No properties yet</h3>
+            <p>Start building your portfolio by adding your first property</p>
+            <button class="btn-add-property" onclick="openPropertyModal()" style="margin-top: 1rem;">Add Your First Property</button>
+        </div>
+    </main>
+
+    <!-- Property Modal -->
+    <div class="property-modal" id="propertyModal">
+        <div class="property-modal-content">
+            <div class="property-modal-header">
+                <h2 id="modal-title">Add Property</h2>
+                <button class="close-modal" onclick="closePropertyModal()">✕</button>
+            </div>
+            <form id="propertyForm">
+                <div class="form-grid-2">
+                    <div class="form-group full">
+                        <label>Property Name (Optional)</label>
+                        <input type="text" id="prop-name" placeholder="e.g., My Dream Home">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Property Type *</label>
+                        <select id="prop-type-modal" required>
+                            <option value="">Select type</option>
+                            <option value="Apartment">Apartment</option>
+                            <option value="Independent House">Independent House</option>
+                            <option value="Villa">Villa</option>
+                            <option value="Plot">Plot</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Bedrooms</label>
+                        <input type="number" id="bedrooms" min="0" placeholder="0">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Bathrooms</label>
+                        <input type="number" id="bathrooms" min="0" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Area (Sq.Ft) *</label>
+                        <input type="number" id="area-sqft" min="100" placeholder="1200" required>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Location (Address/Pincode) *</label>
+                        <input type="text" id="location" placeholder="e.g., Mumbai, Maharashtra" required>
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <select id="state-modal">
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Delhi">Delhi</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="West Bengal">West Bengal</option>
+                            <option value="Telangana">Telangana</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" id="city-modal" placeholder="e.g., Mumbai">
+                    </div>
+                    <div class="form-group">
+                        <label>Amenities</label>
+                        <input type="text" id="amenities" placeholder="Gym, Pool, Garden">
+                    </div>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Purchase Price (Lakhs) *</label>
+                        <input type="number" id="purchase-price" step="0.1" min="0" placeholder="50" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Purchase Date *</label>
+                        <input type="date" id="purchase-date" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit-form">Save Property</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sell Modal -->
+    <div class="property-modal" id="sellModal">
+        <div class="property-modal-content">
+            <div class="property-modal-header">
+                <h2>Mark Property as Sold</h2>
+                <button class="close-modal" onclick="closeSellModal()">✕</button>
+            </div>
+            <form id="sellForm">
+                <div class="form-group">
+                    <label>Selling Price (Lakhs) *</label>
+                    <input type="number" id="selling-price" step="0.1" min="0" placeholder="Enter selling price" required>
+                </div>
+                <div class="form-group">
+                    <label>Selling Date *</label>
+                    <input type="date" id="selling-date" required>
+                </div>
+                <button type="submit" class="btn-submit-form">Mark as Sold</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="profile.js"></script>
+    <script>
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            loadProperties();
+            initializeNavbarHideOnScroll();
+            setupEventListeners();
+        });
+
+        function checkAuthentication() {
+            const user = localStorage.getItem('currentUser');
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const userData = JSON.parse(user);
+            const initial = userData.email.charAt(0).toUpperCase();
+            document.getElementById('user-avatar').textContent = initial;
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            });
+        }
+
+        function initializeNavbarHideOnScroll() {
+            const navbar = document.querySelector('.navbar');
+            let lastScrollTop = 0;
+
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (scrollTop > 100) {
+                    if (scrollTop > lastScrollTop) {
+                        navbar.classList.add('hide');
+                    } else {
+                        navbar.classList.remove('hide');
+                    }
+                } else {
+                    navbar.classList.remove('hide');
+                }
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+            });
+        }
+
+        function setupEventListeners() {
+            document.getElementById('type-filter').addEventListener('change', filterProperties);
+            document.getElementById('status-filter').addEventListener('change', filterProperties);
+            document.getElementById('propertyForm').addEventListener('submit', submitPropertyForm);
+            document.getElementById('sellForm').addEventListener('submit', submitSellForm);
+            
+            // Toggle form fields based on property type
+            document.getElementById('prop-type-modal').addEventListener('change', function() {
+                const type = this.value;
+                const bedroomGroup = document.getElementById('bedrooms').parentElement;
+                const bathroomGroup = document.getElementById('bathrooms').parentElement;
+                
+                if (type === 'Plot') {
+                    bedroomGroup.style.display = 'none';
+                    bathroomGroup.style.display = 'none';
+                } else {
+                    bedroomGroup.style.display = 'flex';
+                    bathroomGroup.style.display = 'flex';
+                }
+            });
+
+            // Close modals when clicking outside
+            document.getElementById('propertyModal').addEventListener('click', function(e) {
+                if (e.target === this) closePropertyModal();
+            });
+            document.getElementById('sellModal').addEventListener('click', function(e) {
+                if (e.target === this) closeSellModal();
+            });
+        }
+
+        function loadProperties() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const properties = JSON.parse(localStorage.getItem(`properties_${user.id}`)) || [];
+            
+            if (properties.length === 0) {
+                document.getElementById('empty-state').style.display = 'block';
+                document.getElementById('properties-container').innerHTML = '';
+                return;
+            }
+
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('analytics-section').style.display = 'grid';
+            renderProperties(properties);
+            updateSummary(properties);
+            updateCharts(properties);
+        }
+
+        let charts = {};
+
+        function updateCharts(properties) {
+            // Destroy existing charts to avoid memory leaks/overlay
+            Object.values(charts).forEach(chart => chart.destroy());
+
+            const ctx1 = document.getElementById('valueHistoryChart').getContext('2d');
+            const ctx2 = document.getElementById('profitLossChart').getContext('2d');
+            const ctx3 = document.getElementById('distributionChart').getContext('2d');
+            const ctx4 = document.getElementById('locationChart').getContext('2d');
+
+            const labels = properties.map(p => p.name || p.type);
+            const purchasePrices = properties.map(p => p.purchase_price);
+            const currentValues = properties.map(p => p.current_value);
+            
+            // Value History Chart (Line)
+            charts.value = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Purchase Price', data: purchasePrices, borderColor: '#a1a1aa', borderDash: [5, 5], fill: false, tension: 0.3 },
+                        { label: 'Current Value', data: currentValues, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } } }, scales: { y: { grid: { color: '#222' }, ticks: { color: '#aaa' } }, x: { grid: { color: '#222' }, ticks: { color: '#aaa' } } } }
+            });
+
+            // Profit/Loss Chart (Bar)
+            const profitData = properties.map(p => p.current_value - p.purchase_price);
+            charts.profit = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Profit/Loss (Lakhs)',
+                        data: profitData,
+                        backgroundColor: profitData.map(v => v >= 0 ? 'rgba(16, 185, 129, 0.6)' : 'rgba(239, 68, 68, 0.6)'),
+                        borderColor: profitData.map(v => v >= 0 ? '#10b981' : '#ef4444'),
+                        borderWidth: 1
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#222' }, ticks: { color: '#aaa' } }, x: { grid: { color: '#222' }, ticks: { color: '#aaa' } } } }
+            });
+
+            // Portfolio Distribution (Pie)
+            const types = {};
+            properties.forEach(p => types[p.type] = (types[p.type] || 0) + 1);
+            charts.dist = new Chart(ctx3, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(types),
+                    datasets: [{
+                        data: Object.values(types),
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#fff', padding: 20 } } } }
+            });
+
+            // Location Comparison (Price/Sqft)
+            const priceSqft = properties.map(p => (p.current_value / p.area_sqft) * 100000); // converting to actual Rs/sqft
+            charts.loc = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Price per Sq.Ft (₹)',
+                        data: priceSqft,
+                        backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1
+                    }]
+                },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#222' }, ticks: { color: '#aaa' } }, y: { grid: { color: '#222' }, ticks: { color: '#aaa' } } } }
+            });
+        }
+
+        function renderProperties(properties) {
+            const container = document.getElementById('properties-container');
+            const tbody = document.getElementById('table-body');
+            container.innerHTML = '';
+            tbody.innerHTML = '';
+
+            properties.forEach((prop, index) => {
+                const card = createPropertyCard(prop, index);
+                container.appendChild(card);
+
+                const row = createPropertyRow(prop, index);
+                tbody.appendChild(row);
+            });
+        }
+
+        function createPropertyCard(prop, index) {
+            const card = document.createElement('div');
+            card.className = 'property-card';
+            
+            const profitLoss = prop.current_value - prop.purchase_price;
+            const profitPercentage = ((profitLoss / prop.purchase_price) * 100).toFixed(1);
+            const isProfitable = profitLoss >= 0;
+
+            card.innerHTML = `
+                <div class="property-header">
+                    <div>
+                        <div class="property-name">${prop.name || 'Unnamed Property'}</div>
+                        <div class="property-type-badge">${prop.type}</div>
+                    </div>
+                    ${prop.sold ? '<div class="property-sold-badge">SOLD</div>' : ''}
+                </div>
+                <div class="property-content">
+                    <div class="property-location">📍 ${prop.location}</div>
+                    <div class="property-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Area</span>
+                            <span class="detail-value">${prop.area_sqft} sq.ft</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">BHK</span>
+                            <span class="detail-value">${prop.bedrooms || 'N/A'}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Price/Sq.ft</span>
+                            <span class="detail-value">₹${(prop.current_value / prop.area_sqft).toFixed(0)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Bathrooms</span>
+                            <span class="detail-value">${prop.bathrooms || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="property-values">
+                        <div class="value-row">
+                            <span>Purchase Price</span>
+                            <span>₹${prop.purchase_price}L</span>
+                        </div>
+                        <div class="value-row">
+                            <span>Current Value</span>
+                            <span>₹${prop.current_value.toFixed(1)}L</span>
+                        </div>
+                        <div class="value-row ${isProfitable ? 'value-positive' : 'value-negative'}">
+                            <span>Profit/Loss</span>
+                            <span>₹${profitLoss.toFixed(1)}L (${profitPercentage}%)</span>
+                        </div>
+                    </div>
+                    ${prop.sold && prop.selling_price ? `
+                        <div style="background: var(--success-bg); padding: 0.8rem; border-radius: var(--radius-md); margin: 0.5rem 0; text-align: center;">
+                            <div style="color: var(--success); font-weight: 600;">Final Selling Price: ₹${prop.selling_price}L</div>
+                            <div style="color: var(--text-muted); font-size: 0.85rem;">Realized Profit: ₹${(prop.selling_price - prop.purchase_price).toFixed(1)}L</div>
+                        </div>
+                    ` : ''}
+                    <div class="property-actions">
+                        ${!prop.sold ? `
+                            <button class="btn-action btn-edit" onclick="editProperty(${index})">✏️ Edit</button>
+                            <button class="btn-action btn-sell" onclick="openSellModal(${index})">💰 Sell</button>
+                        ` : ''}
+                        <button class="btn-action btn-delete" onclick="deleteProperty(${index})">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function createPropertyRow(prop, index) {
+            const row = document.createElement('tr');
+            const profitLoss = prop.current_value - prop.purchase_price;
+            const profitPercentage = ((profitLoss / prop.purchase_price) * 100).toFixed(1);
+            
+            row.innerHTML = `
+                <td>
+                    <strong>${prop.name || 'Unnamed'}</strong><br>
+                    <span style="color: var(--text-muted); font-size: 0.85rem;">${prop.type}</span>
+                </td>
+                <td>${prop.location}</td>
+                <td>₹${prop.purchase_price}L</td>
+                <td>₹${prop.current_value.toFixed(1)}L</td>
+                <td style="${profitLoss >= 0 ? 'color: var(--success)' : 'color: var(--danger)'}">
+                    ₹${profitLoss.toFixed(1)}L (${profitPercentage}%)
+                </td>
+                <td>${prop.sold ? '<span style="color: var(--success)">Sold</span>' : '<span style="color: var(--primary)">Active</span>'}</td>
+                <td>
+                    <button onclick="editProperty(${index})" style="background: none; border: none; cursor: pointer; color: var(--primary);">✏️</button>
+                    <button onclick="deleteProperty(${index})" style="background: none; border: none; cursor: pointer; color: var(--danger);">🗑️</button>
+                </td>
+            `;
+            
+            return row;
+        }
+
+        function updateSummary(properties) {
+            let totalInvestment = 0;
+            let totalValue = 0;
+            let bestProperty = { profit: -Infinity, name: '-', percentage: 0 };
+
+            properties.forEach(prop => {
+                totalInvestment += prop.purchase_price;
+                totalValue += prop.current_value;
+
+                const profitLoss = prop.current_value - prop.purchase_price;
+                const profitPercentage = (profitLoss / prop.purchase_price) * 100;
+
+                if (profitPercentage > bestProperty.percentage) {
+                    bestProperty = {
+                        profit: profitLoss,
+                        name: prop.name || 'Unnamed',
+                        percentage: profitPercentage
+                    };
+                }
+            });
+
+            const totalProfit = totalValue - totalInvestment;
+
+            document.getElementById('total-investment').textContent = totalInvestment.toFixed(1);
+            document.getElementById('total-value').textContent = totalValue.toFixed(1);
+            document.getElementById('total-profit').textContent = totalProfit.toFixed(1);
+            document.getElementById('investment-properties').textContent = properties.length;
+            document.getElementById('best-property').textContent = bestProperty.name;
+            document.getElementById('best-profit').textContent = bestProperty.percentage > 0 ? `↑ ${bestProperty.percentage.toFixed(1)}%` : `↓ ${bestProperty.percentage.toFixed(1)}%`;
+
+            const profitCard = document.getElementById('profit-card');
+            const changeElement = document.getElementById('profit-change');
+            if (totalProfit >= 0) {
+                profitCard.classList.remove('loss');
+                profitCard.classList.add('profit');
+                changeElement.className = 'summary-change positive';
+                changeElement.textContent = '↑ Positive';
+            } else {
+                profitCard.classList.remove('profit');
+                profitCard.classList.add('loss');
+                changeElement.className = 'summary-change negative';
+                changeElement.textContent = '↓ Negative';
+            }
+        }
+
+        function filterProperties() {
+            const typeFilter = document.getElementById('type-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            let properties = JSON.parse(localStorage.getItem(`properties_${user.id}`)) || [];
+
+            if (typeFilter) {
+                properties = properties.filter(p => p.type === typeFilter);
+            }
+            if (statusFilter === 'sold') {
+                properties = properties.filter(p => p.sold);
+            } else if (statusFilter === 'active') {
+                properties = properties.filter(p => !p.sold);
+            }
+
+            if (properties.length === 0) {
+                document.getElementById('properties-container').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><p>No properties match your filters</p></div>';
+                return;
+            }
+
+            renderProperties(properties);
+        }
+
+        function openPropertyModal() {
+            document.getElementById('modal-title').textContent = 'Add Property';
+            document.getElementById('propertyForm').reset();
+            document.getElementById('propertyForm').dataset.index = '';
+            document.getElementById('propertyModal').classList.add('active');
+        }
+
+        function closePropertyModal() {
+            document.getElementById('propertyModal').classList.remove('active');
+        }
+
+        function editProperty(index) {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const properties = JSON.parse(localStorage.getItem(`properties_${user.id}`)) || [];
+            const prop = properties[index];
+
+            document.getElementById('modal-title').textContent = 'Edit Property';
+            document.getElementById('prop-name').value = prop.name || '';
+            document.getElementById('prop-type-modal').value = prop.type;
+            document.getElementById('bedrooms').value = prop.bedrooms || '';
+            document.getElementById('bathrooms').value = prop.bathrooms || '';
+            document.getElementById('area-sqft').value = prop.area_sqft;
+            document.getElementById('location').value = prop.location;
+            document.getElementById('state-modal').value = prop.state || 'Maharashtra';
+            document.getElementById('city-modal').value = prop.city || '';
+            document.getElementById('amenities').value = prop.amenities || '';
+            document.getElementById('purchase-price').value = prop.purchase_price;
+            document.getElementById('purchase-date').value = prop.purchase_date;
+            
+            document.getElementById('propertyForm').dataset.index = index;
+            document.getElementById('propertyModal').classList.add('active');
+        }
+
+        async function submitPropertyForm(e) {
+            e.preventDefault();
+
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            let properties = JSON.parse(localStorage.getItem(`properties_${user.id}`)) || [];
+            const index = document.getElementById('propertyForm').dataset.index;
+
+            const propertyData = {
+                name: document.getElementById('prop-name').value,
+                property_type: document.getElementById('prop-type-modal').value,
+                bedrooms: parseInt(document.getElementById('bedrooms').value) || 0,
+                bathrooms: parseInt(document.getElementById('bathrooms').value) || 0,
+                area_sqft: parseFloat(document.getElementById('area-sqft').value),
+                location: document.getElementById('location').value,
+                state: document.getElementById('state-modal').value,
+                city: document.getElementById('city-modal').value,
+                amenities: document.getElementById('amenities').value || "None",
+                purchase_price: parseFloat(document.getElementById('purchase-price').value),
+                purchase_date: document.getElementById('purchase-date').value
+            };
+
+            try {
+                // Fetch current value prediction from backend
+                const response = await fetch('http://localhost:8000/predict-portfolio-value', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(propertyData)
+                });
+                
+                if (!response.ok) throw new Error('API request failed');
+                
+                const result = await response.json();
+                
+                const property = {
+                    ...propertyData,
+                    type: propertyData.property_type,
+                    current_value: result.current_value_lakhs,
+                    sold: false
+                };
+
+                if (index === '') {
+                    properties.push(property);
+                } else {
+                    // Preserve sold status if editing
+                    const oldProp = properties[parseInt(index)];
+                    properties[parseInt(index)] = { ...oldProp, ...property };
+                }
+
+                localStorage.setItem(`properties_${user.id}`, JSON.stringify(properties));
+                closePropertyModal();
+                loadProperties();
+            } catch (error) {
+                console.error("Error predicting property value:", error);
+                // Fallback if backend is down
+                const property = {
+                    ...propertyData,
+                    type: propertyData.property_type,
+                    current_value: propertyData.purchase_price * 1.1,
+                    sold: false
+                };
+                if (index === '') properties.push(property);
+                else properties[parseInt(index)] = { ...properties[parseInt(index)], ...property };
+                localStorage.setItem(`properties_${user.id}`, JSON.stringify(properties));
+                closePropertyModal();
+                loadProperties();
+            }
+        }
+
+        function deleteProperty(index) {
+            if (confirm('Are you sure you want to delete this property?')) {
+                const user = JSON.parse(localStorage.getItem('currentUser'));
+                let properties = JSON.parse(localStorage.getItem(`properties_${user.id}`)) || [];
+                properties.splice(index, 1);
+                localStorage.setItem(`properties_${user.id}`, JSON.stringify(properties));
+                loadProperties();
+            }
+        }
+
+        let currentSellIndex = null;
+
+        function openSellModal(index) {
+            currentSellIndex = index;
+            document.getElementById('sellModal').classList.add('active');
+        }
+
+        function closeSellModal() {
+            document.getElementById('sellModal').classList.remove('active');
+            currentSellIndex = null;
+        }
+
+        function submitSellForm(e) {
+            e.preventDefault();
+
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            let properties = JSON.parse(localStorage.getItem(`properties_${user.id}`)) || [];
+
+            properties[currentSellIndex].sold = true;
+            properties[currentSellIndex].selling_price = parseFloat(document.getElementById('selling-price').value);
+            properties[currentSellIndex].selling_date = document.getElementById('selling-date').value;
+
+            localStorage.setItem(`properties_${user.id}`, JSON.stringify(properties));
+            closeSellModal();
+            loadProperties();
+        }
+    </script>
+</body>
+</html>

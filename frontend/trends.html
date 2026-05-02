@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estato | Market Trends</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <span class="logo-icon">🏢</span> Estato
+        </a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link" data-page="home">Home</a>
+            <a href="compare.html" class="nav-link" data-page="compare">Compare</a>
+            <a href="heatmap.html" class="nav-link" data-page="heatmap">Heatmap</a>
+            <a href="trends.html" class="nav-link active" data-page="trends">Trends</a>
+            <a href="analytics.html" class="nav-link" data-page="analytics">Analytics</a>
+            <a href="insights.html" class="nav-link" data-page="insights">Insights</a>
+            <a href="profile.html" class="nav-link" data-page="profile" id="profile-link" style="display:none;">Profile</a>
+        </nav>
+        <div class="nav-actions">
+            <button class="btn btn-outline auth-btn" id="auth-btn" style="padding: 0.5rem 1rem;">Sign In</button>
+            <div class="nav-avatar-container" id="user-profile" style="display:none;">
+                <div class="nav-avatar" id="user-avatar">U</div>
+                <div class="profile-dropdown" id="profile-dropdown">
+                    <a href="profile.html" class="dropdown-item">📊 Dashboard</a>
+                    <a href="#" class="dropdown-item" id="logout-btn">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="hero-split" style="min-height: 250px; margin-bottom: 2rem;">
+            <div class="hero-text">
+                <h1 class="hero-title">Market <span class="text-primary">Trends</span></h1>
+                <p class="hero-subtitle">Analyze real estate pricing over time and across different locations.</p>
+            </div>
+            <div class="hero-3d" style="height: 250px;">
+                <canvas id="canvas3d"></canvas>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 2rem;">
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="input-group">
+                    <label>City</label>
+                    <select id="trend-city">
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="New Delhi">New Delhi</option>
+                        <option value="Bangalore">Bangalore</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Property Type</label>
+                    <select id="trend-type">
+                        <option value="Apartment">Apartment</option>
+                        <option value="Villa">Villa</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Time Range</label>
+                    <select id="trend-time">
+                        <option value="1">Last 1 Year</option>
+                        <option value="5" selected>Last 5 Years</option>
+                        <option value="10">Last 10 Years</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="app-grid">
+            <div class="card">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>Price Over Time</h2>
+                    <span id="growth-badge" style="background:var(--success-bg); color:var(--success); padding:0.3rem 0.6rem; border-radius:12px; font-size:0.85rem; font-weight:600;">+12.4%</span>
+                </div>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2>Avg Price by Area</h2>
+                </div>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" style="margin-top: 4rem;">
+        <div class="footer-bottom">
+            &copy; 2026 Estato AI. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="trends.js"></script>
+
+    <!-- Spline 3D Runtime -->
+    <script type="module">
+        import { Application } from 'https://esm.sh/@splinetool/runtime';
+        const canvas = document.getElementById('canvas3d');
+        if (canvas) {
+            const spline = new Application(canvas);
+            spline.load('https://prod.spline.design/XjPDmd3N1NXUJgIH/scene.splinecode');
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAuthUI();
+            initializeNavbarHideOnScroll();
+        });
+
+        function initializeAuthUI() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                showUserProfile(JSON.parse(currentUser));
+            }
+        }
+
+        function showUserProfile(user) {
+            const authBtn = document.getElementById('auth-btn');
+            const userProfile = document.getElementById('user-profile');
+            const userAvatar = document.getElementById('user-avatar');
+            const profileLink = document.getElementById('profile-link');
+
+            authBtn.style.display = 'none';
+            userProfile.style.display = 'flex';
+            profileLink.style.display = 'block';
+            
+            const initial = user.email.charAt(0).toUpperCase();
+            userAvatar.textContent = initial;
+
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('currentUser');
+                location.reload();
+            });
+        }
+
+        function initializeNavbarHideOnScroll() {
+            const navbar = document.querySelector('.navbar');
+            let lastScrollTop = 0;
+
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (scrollTop > 100) {
+                    if (scrollTop > lastScrollTop) {
+                        navbar.classList.add('hide');
+                    } else {
+                        navbar.classList.remove('hide');
+                    }
+                } else {
+                    navbar.classList.remove('hide');
+                }
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+            });
+        }
+    </script>
+</body>
+</html>

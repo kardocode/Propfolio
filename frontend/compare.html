@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estato | Compare Properties</title>
+    <meta name="description" content="Compare multiple real estate properties side-by-side.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <span class="logo-icon">🏢</span> Estato
+        </a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link" data-page="home">Home</a>
+            <a href="compare.html" class="nav-link active" data-page="compare">Compare</a>
+            <a href="heatmap.html" class="nav-link" data-page="heatmap">Heatmap</a>
+            <a href="trends.html" class="nav-link" data-page="trends">Trends</a>
+            <a href="analytics.html" class="nav-link" data-page="analytics">Analytics</a>
+            <a href="insights.html" class="nav-link" data-page="insights">Insights</a>
+            <a href="profile.html" class="nav-link" data-page="profile" id="profile-link" style="display:none;">Profile</a>
+        </nav>
+        <div class="nav-actions">
+            <button class="btn btn-outline auth-btn" id="auth-btn" style="padding: 0.5rem 1rem;">Sign In</button>
+            <div class="nav-avatar-container" id="user-profile" style="display:none;">
+                <div class="nav-avatar" id="user-avatar">U</div>
+                <div class="profile-dropdown" id="profile-dropdown">
+                    <a href="profile.html" class="dropdown-item">📊 Dashboard</a>
+                    <a href="#" class="dropdown-item" id="logout-btn">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="hero-section">
+            <h1 class="hero-title">Compare <span class="text-primary">Properties</span></h1>
+            <p class="hero-subtitle">Evaluate multiple properties side-by-side to find the best value.</p>
+        </div>
+
+        <!-- Add Property Section -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h2>Add Property to Compare (<span id="prop-count">0</span>/3)</h2>
+                <button id="btn-add-prop" class="btn btn-primary" style="width:auto; margin-top:0;">+ Add to
+                    Comparison</button>
+            </div>
+
+            <form id="compare-form">
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Location (City)</label>
+                        <select id="comp-city">
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="New Delhi">New Delhi</option>
+                            <option value="Bangalore">Bangalore</option>
+                            <option value="Chennai">Chennai</option>
+                            <option value="Pune">Pune</option>
+                            <option value="Hyderabad">Hyderabad</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Pincode</label>
+                        <input type="text" id="comp-pincode" placeholder="e.g. 400001">
+                    </div>
+                    <div class="input-group">
+                        <label>Property Type</label>
+                        <select id="comp-type">
+                            <option value="Apartment">Apartment</option>
+                            <option value="Independent House">Independent House</option>
+                            <option value="Villa">Villa</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Bedrooms (BHK)</label>
+                        <input type="number" id="comp-bhk" value="2" min="1" max="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Bathrooms</label>
+                        <input type="number" id="comp-bath" value="2" min="1" max="10">
+                    </div>
+                    <div class="input-group">
+                        <label>Size (Sq.Ft)</label>
+                        <input type="number" id="comp-size" value="1200" min="100">
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <label style="font-size:0.85rem; font-weight:500; color:var(--text-muted);">Amenities</label>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-label"><input type="checkbox" value="Gym" class="comp-amenity" checked>
+                            Gym</label>
+                        <label class="checkbox-label"><input type="checkbox" value="Pool" class="comp-amenity" checked>
+                            Pool</label>
+                        <label class="checkbox-label"><input type="checkbox" value="Clubhouse" class="comp-amenity">
+                            Clubhouse</label>
+                        <label class="checkbox-label"><input type="checkbox" value="Garden" class="comp-amenity"
+                                checked> Garden</label>
+                        <label class="checkbox-label"><input type="checkbox" value="Playground" class="comp-amenity">
+                            Playground</label>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Comparison Table Section -->
+        <div id="compare-results" class="hidden">
+            <h3 style="margin-bottom: 1rem;">Comparison Results</h3>
+            <div class="compare-grid" id="compare-grid">
+                <!-- Property Cards injected here -->
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4><span class="logo-icon">🏢</span> Estato</h4>
+                <p>An AI-powered real estate prediction platform designed to help you make data-driven property
+                    decisions.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="compare.html">Compare</a></li>
+                    <li><a href="#">Heatmap</a></li>
+                    <li><a href="#">Trends</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">How it Works</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contact</h4>
+                <ul>
+                    <li><a href="#">support@estato.ai</a></li>
+                    <li><a href="#">GitHub</a></li>
+                    <li><a href="#">LinkedIn</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Estato AI. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="compare.js"></script>
+    <!-- Spline 3D Runtime -->
+    <script type="module">
+        import { Application } from 'https://esm.sh/@splinetool/runtime';
+        const canvas = document.getElementById('canvas3d');
+        if (canvas) {
+            const spline = new Application(canvas);
+
+            spline.load('https://prod.spline.design/XjPDmd3N1NXUJgIH/scene.splinecode');
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAuthUI();
+            initializeNavbarHideOnScroll();
+        });
+
+        function initializeAuthUI() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                showUserProfile(JSON.parse(currentUser));
+            }
+        }
+
+        function showUserProfile(user) {
+            const authBtn = document.getElementById('auth-btn');
+            const userProfile = document.getElementById('user-profile');
+            const userAvatar = document.getElementById('user-avatar');
+            const profileLink = document.getElementById('profile-link');
+
+            authBtn.style.display = 'none';
+            userProfile.style.display = 'flex';
+            profileLink.style.display = 'block';
+            
+            const initial = user.email.charAt(0).toUpperCase();
+            userAvatar.textContent = initial;
+
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('currentUser');
+                location.reload();
+            });
+        }
+
+        function initializeNavbarHideOnScroll() {
+            const navbar = document.querySelector('.navbar');
+            let lastScrollTop = 0;
+
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (scrollTop > 100) {
+                    if (scrollTop > lastScrollTop) {
+                        navbar.classList.add('hide');
+                    } else {
+                        navbar.classList.remove('hide');
+                    }
+                } else {
+                    navbar.classList.remove('hide');
+                }
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estato | Price Heatmap</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <span class="logo-icon">🏢</span> Estato
+        </a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link" data-page="home">Home</a>
+            <a href="compare.html" class="nav-link" data-page="compare">Compare</a>
+            <a href="heatmap.html" class="nav-link active" data-page="heatmap">Heatmap</a>
+            <a href="trends.html" class="nav-link" data-page="trends">Trends</a>
+            <a href="analytics.html" class="nav-link" data-page="analytics">Analytics</a>
+            <a href="insights.html" class="nav-link" data-page="insights">Insights</a>
+            <a href="profile.html" class="nav-link" data-page="profile" id="profile-link" style="display:none;">Profile</a>
+        </nav>
+        <div class="nav-actions">
+            <button class="btn btn-outline auth-btn" id="auth-btn" style="padding: 0.5rem 1rem;">Sign In</button>
+            <div class="nav-avatar-container" id="user-profile" style="display:none;">
+                <div class="nav-avatar" id="user-avatar">U</div>
+                <div class="profile-dropdown" id="profile-dropdown">
+                    <a href="profile.html" class="dropdown-item">📊 Dashboard</a>
+                    <a href="#" class="dropdown-item" id="logout-btn">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container" style="display:flex; flex-direction:column;">
+        <div class="hero-split" style="min-height: 250px; margin-bottom: 2rem;">
+            <div class="hero-text">
+                <h1 class="hero-title">Price <span class="text-primary">Heatmap</span></h1>
+                <p class="hero-subtitle">Interactive geographical price distribution of predicted real estate values.</p>
+            </div>
+            <div class="hero-3d" style="height: 250px;">
+                <canvas id="canvas3d"></canvas>
+            </div>
+        </div>
+
+        <div style="display:flex; gap: 1.5rem; flex:1;">
+            <!-- Controls Panel -->
+            <div class="card" style="width: 300px; flex-shrink: 0; display:flex; flex-direction:column; gap: 1rem;">
+                <h3>Filters</h3>
+                <div class="input-group">
+                    <label>City</label>
+                    <select id="hm-city">
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="New Delhi">New Delhi</option>
+                        <option value="Bangalore">Bangalore</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Property Type</label>
+                    <select id="hm-type">
+                        <option value="Apartment">Apartment</option>
+                        <option value="Villa">Villa</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Bedrooms</label>
+                    <input type="number" id="hm-bhk" value="2" min="1" max="10">
+                </div>
+                <button class="btn btn-primary" id="btn-update-map">Update Heatmap</button>
+                
+                <div style="margin-top:auto; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                    <h4>Legend</h4>
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;"><div style="width:15px; height:15px; background:red; border-radius:3px;"></div> Expensive</div>
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;"><div style="width:15px; height:15px; background:yellow; border-radius:3px;"></div> Moderate</div>
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.5rem;"><div style="width:15px; height:15px; background:green; border-radius:3px;"></div> Affordable</div>
+                </div>
+            </div>
+
+            <!-- Map Panel -->
+            <div style="flex:1; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-color);">
+                <div id="heatmap-container" style="width:100%; height: 600px;"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="heatmap.js"></script>
+
+    <!-- Spline 3D Runtime -->
+    <script type="module">
+        import { Application } from 'https://esm.sh/@splinetool/runtime';
+        const canvas = document.getElementById('canvas3d');
+        if (canvas) {
+            const spline = new Application(canvas);
+            spline.load('https://prod.spline.design/XjPDmd3N1NXUJgIH/scene.splinecode');
+        }
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAuthUI();
+            initializeNavbarHideOnScroll();
+        });
+
+        function initializeAuthUI() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser) {
+                showUserProfile(JSON.parse(currentUser));
+            }
+        }
+
+        function showUserProfile(user) {
+            const authBtn = document.getElementById('auth-btn');
+            const userProfile = document.getElementById('user-profile');
+            const userAvatar = document.getElementById('user-avatar');
+            const profileLink = document.getElementById('profile-link');
+
+            authBtn.style.display = 'none';
+            userProfile.style.display = 'flex';
+            profileLink.style.display = 'block';
+            
+            const initial = user.email.charAt(0).toUpperCase();
+            userAvatar.textContent = initial;
+
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('currentUser');
+                location.reload();
+            });
+        }
+
+        function initializeNavbarHideOnScroll() {
+            const navbar = document.querySelector('.navbar');
+            let lastScrollTop = 0;
+
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (scrollTop > 100) {
+                    if (scrollTop > lastScrollTop) {
+                        navbar.classList.add('hide');
+                    } else {
+                        navbar.classList.remove('hide');
+                    }
+                } else {
+                    navbar.classList.remove('hide');
+                }
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+            });
+        }
+    </script>
+</body>
+</html>

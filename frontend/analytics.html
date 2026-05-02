@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics & Insights | Estato</title>
+    <meta name="description" content="Analyze your real estate portfolio with interactive charts and insights.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Analytics Page Specific Styles */
+        .analytics-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .analytics-header {
+            margin-bottom: 2rem;
+        }
+
+        .analytics-header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Filter Section */
+        .filters-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            background: #1a1a1a;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .filter-select:hover,
+        .filter-select:focus {
+            background: var(--card-bg);
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .btn-reset-filters {
+            padding: 0.75rem 1.5rem;
+            background: var(--border-color);
+            color: var(--text-main);
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            align-self: flex-end;
+        }
+
+        .btn-reset-filters:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+
+        .chart-header {
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.3rem;
+        }
+
+        .chart-description {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .chart-container {
+            position: relative;
+            flex: 1;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-container canvas {
+            max-height: 400px;
+        }
+
+        /* Full Width Chart */
+        .chart-full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Empty State */
+        .chart-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            color: var(--text-muted);
+        }
+
+        .chart-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .chart-empty-text {
+            text-align: center;
+        }
+
+        .chart-empty-text h3 {
+            color: var(--text-main);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Insights Cards */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, var(--card-bg) 0%, #1a1a1a 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .insight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary);
+        }
+
+        .insight-card.positive::before {
+            background: var(--success);
+        }
+
+        .insight-card.negative::before {
+            background: var(--danger);
+        }
+
+        .insight-icon {
+            font-size: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .insight-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .insight-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.3rem;
+        }
+
+        .insight-change {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .insight-change.positive {
+            color: var(--success);
+        }
+
+        .insight-change.negative {
+            color: var(--danger);
+        }
+
+        /* Legend Styling */
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        /* Loading State */
+        .chart-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-full-width {
+                grid-column: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .analytics-container {
+                padding: 1rem;
+            }
+
+            .analytics-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .filters-section {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                gap: 1.5rem;
+            }
+
+            .chart-card {
+                padding: 1rem;
+            }
+
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Chart.js Tooltip Styling */
+        .chartjs-tooltip {
+            opacity: 1;
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 3px;
+            -webkit-transition: all .1s ease;
+            transition: all .1s ease;
+            pointer-events: none;
+            -webkit-transform: translate(-50%, 0);
+            transform: translate(-50%, 0);
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <span class="logo-icon">🏢</span> Estato
+        </a>
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link" data-page="home">Home</a>
+            <a href="compare.html" class="nav-link" data-page="compare">Compare</a>
+            <a href="heatmap.html" class="nav-link" data-page="heatmap">Heatmap</a>
+            <a href="trends.html" class="nav-link" data-page="trends">Trends</a>
+            <a href="analytics.html" class="nav-link active" data-page="analytics">Analytics</a>
+            <a href="insights.html" class="nav-link" data-page="insights">Insights</a>
+            <a href="profile.html" class="nav-link" data-page="profile" id="profile-link" style="display:none;">Profile</a>
+        </nav>
+        <div class="nav-actions">
+            <button class="btn btn-outline auth-btn" id="auth-btn" style="padding: 0.5rem 1rem;">Sign In</button>
+            <div class="nav-avatar-container" id="user-profile" style="display:none;">
+                <div class="nav-avatar" id="user-avatar">U</div>
+                <div class="profile-dropdown" id="profile-dropdown">
+                    <a href="profile.html" class="dropdown-item">📊 Dashboard</a>
+                    <a href="#" class="dropdown-item" id="logout-btn">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="analytics-container">
+        <div class="analytics-header">
+            <h1>📊 Analytics & Insights</h1>
+            <p style="color: var(--text-muted);">Visualize your portfolio performance and investment trends</p>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section" id="filters-section">
+            <div class="filter-group">
+                <label>Property Type</label>
+                <select class="filter-select" id="filter-property-type">
+                    <option value="">All Types</option>
+                    <option value="Apartment">Apartment</option>
+                    <option value="Independent House">Independent House</option>
+                    <option value="Villa">Villa</option>
+                    <option value="Plot">Plot</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Time Range</label>
+                <select class="filter-select" id="filter-time-range">
+                    <option value="all">All Time</option>
+                    <option value="6m">Last 6 Months</option>
+                    <option value="1y">Last 1 Year</option>
+                    <option value="3y">Last 3 Years</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Location</label>
+                <select class="filter-select" id="filter-location">
+                    <option value="">All Locations</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Bangalore">Bangalore</option>
+                    <option value="Hyderabad">Hyderabad</option>
+                    <option value="Pune">Pune</option>
+                    <option value="Chennai">Chennai</option>
+                    <option value="Kolkata">Kolkata</option>
+                </select>
+            </div>
+
+            <button class="btn-reset-filters" onclick="resetFilters()">Reset Filters</button>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="charts-grid">
+            <!-- Property Value Over Time Chart -->
+            <div class="chart-card chart-full-width">
+                <div class="chart-header">
+                    <div class="chart-title">📈 Property Value Over Time</div>
+                    <div class="chart-description">Track appreciation from purchase to current predicted value</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="valueOverTimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Profit/Loss Comparison Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">💰 Profit/Loss by Property</div>
+                    <div class="chart-description">Performance of each investment at a glance</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="profitLossChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Portfolio Distribution Pie Chart -->
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">🎯 Portfolio Distribution</div>
+                    <div class="chart-description">Investment spread by property type</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="portfolioDistributionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Price by Location Chart -->
+            <div class="chart-card chart-full-width">
+                <div class="chart-header">
+                    <div class="chart-title">📍 Price Per Sq.Ft by Location</div>
+                    <div class="chart-description">Comparing property valuations across different areas</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priceByLocationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insights Section -->
+        <div class="analytics-header" style="margin-top: 3rem;">
+            <h2 style="font-size: 1.5rem;">Key Insights</h2>
+            <p style="color: var(--text-muted);">Quick portfolio statistics</p>
+        </div>
+
+        <div class="insights-grid">
+            <div class="insight-card positive">
+                <div class="insight-icon">📊</div>
+                <div class="insight-label">Total Properties</div>
+                <div class="insight-value" id="insight-count">0</div>
+                <div class="insight-change">in your portfolio</div>
+            </div>
+
+            <div class="insight-card">
+                <div class="insight-icon">💵</div>
+                <div class="insight-label">Total Investment</div>
+                <div class="insight-value" id="insight-investment">₹0L</div>
+                <div class="insight-change">initial capital</div>
+            </div>
+
+            <div class="insight-card">
+                <div class="insight-icon">📈</div>
+                <div class="insight-label">Current Portfolio Value</div>
+                <div class="insight-value" id="insight-value">₹0L</div>
+                <div class="insight-change">estimated</div>
+            </div>
+
+            <div class="insight-card positive" id="profit-insight">
+                <div class="insight-icon">✅</div>
+                <div class="insight-label">Total Profit/Loss</div>
+                <div class="insight-value" id="insight-profit">₹0L</div>
+                <div class="insight-change positive" id="insight-profit-pct">+0%</div>
+            </div>
+
+            <div class="insight-card">
+                <div class="insight-icon">⭐</div>
+                <div class="insight-label">Best Performer</div>
+                <div class="insight-value" id="insight-best" style="font-size: 1.2rem;">-</div>
+                <div class="insight-change" id="insight-best-pct">No data</div>
+            </div>
+
+            <div class="insight-card">
+                <div class="insight-icon">📍</div>
+                <div class="insight-label">Most Valuable Location</div>
+                <div class="insight-value" id="insight-location" style="font-size: 1.2rem;">-</div>
+                <div class="insight-change" id="insight-location-value">₹0L</div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Chart instances
+        let charts = {
+            valueOverTime: null,
+            profitLoss: null,
+            portfolioDistribution: null,
+            priceByLocation: null
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            initializeNavbarHideOnScroll();
+            setupEventListeners();
+            loadAndRenderCharts();
+        });
+
+        function checkAuthentication() {
+            const user = localStorage.getItem('currentUser');
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const userData = JSON.parse(user);
+            const initial = userData.email.charAt(0).toUpperCase();
+            document.getElementById('user-avatar').textContent = initial;
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('currentUser');
+                window.location.href = 'index.html';
+            });
+        }
+
+        function initializeNavbarHideOnScroll() {
+            const navbar = document.querySelector('.navbar');
+            let lastScrollTop = 0;
+
+            window.addEventListener('scroll', function() {
+                const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+                if (scrollTop > 100) {
+                    if (scrollTop > lastScrollTop) {
+                        navbar.classList.add('hide');
+                    } else {
+                        navbar.classList.remove('hide');
+                    }
+                } else {
+                    navbar.classList.remove('hide');
+                }
+                lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+            });
+        }
+
+        function setupEventListeners() {
+            document.getElementById('filter-property-type').addEventListener('change', loadAndRenderCharts);
+            document.getElementById('filter-time-range').addEventListener('change', loadAndRenderCharts);
+            document.getElementById('filter-location').addEventListener('change', loadAndRenderCharts);
+        }
+
+        function resetFilters() {
+            document.getElementById('filter-property-type').value = '';
+            document.getElementById('filter-time-range').value = 'all';
+            document.getElementById('filter-location').value = '';
+            loadAndRenderCharts();
+        }
+
+        function getFilteredProperties() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            let properties = JSON.parse(localStorage.getItem(`properties_${user.id}`)) || [];
+
+            const typeFilter = document.getElementById('filter-property-type').value;
+            const locationFilter = document.getElementById('filter-location').value;
+            const timeRange = document.getElementById('filter-time-range').value;
+
+            // Apply type filter
+            if (typeFilter) {
+                properties = properties.filter(p => p.type === typeFilter);
+            }
+
+            // Apply location filter
+            if (locationFilter) {
+                properties = properties.filter(p => p.city === locationFilter);
+            }
+
+            // Apply time range filter
+            if (timeRange !== 'all') {
+                const now = new Date();
+                properties = properties.filter(p => {
+                    const purchaseDate = new Date(p.purchase_date);
+                    const monthsDiff = (now - purchaseDate) / (1000 * 60 * 60 * 24 * 30);
+                    
+                    if (timeRange === '6m') return monthsDiff <= 6;
+                    if (timeRange === '1y') return monthsDiff <= 12;
+                    if (timeRange === '3y') return monthsDiff <= 36;
+                    return true;
+                });
+            }
+
+            return properties;
+        }
+
+        function getPropertyValue(property) {
+            // Calculate appreciation
+            const purchaseDate = new Date(property.purchase_date);
+            const currentDate = new Date();
+            const yearsDiff = (currentDate - purchaseDate) / (1000 * 60 * 60 * 24 * 365.25);
+            
+            // City multipliers
+            const cityMultipliers = {
+                'Mumbai': 1.15,
+                'Bangalore': 1.12,
+                'Delhi': 1.10,
+                'Hyderabad': 1.08,
+                'Pune': 1.05,
+                'Chennai': 1.04,
+                'Kolkata': 1.03,
+            };
+            
+            // Type multipliers
+            const typeMultipliers = {
+                'Apartment': 1.0,
+                'Independent House': 1.05,
+                'Villa': 1.10,
+                'Plot': 1.12,
+            };
+
+            const cityMult = cityMultipliers[property.city] || 1.0;
+            const typeMult = typeMultipliers[property.type] || 1.0;
+            const baseMultiplier = Math.pow(1.08, yearsDiff);
+            const finalMultiplier = baseMultiplier * cityMult * typeMult;
+
+            return property.purchase_price * finalMultiplier;
+        }
+
+        function loadAndRenderCharts() {
+            const properties = getFilteredProperties();
+
+            if (properties.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            renderValueOverTimeChart(properties);
+            renderProfitLossChart(properties);
+            renderPortfolioDistributionChart(properties);
+            renderPriceByLocationChart(properties);
+            updateInsights(properties);
+        }
+
+        function showEmptyState() {
+            const chartIds = ['valueOverTimeChart', 'profitLossChart', 'portfolioDistributionChart', 'priceByLocationChart'];
+            chartIds.forEach(id => {
+                const ctx = document.getElementById(id);
+                if (ctx) {
+                    ctx.style.display = 'none';
+                }
+            });
+        }
+
+        // Chart 1: Property Value Over Time
+        function renderValueOverTimeChart(properties) {
+            const ctx = document.getElementById('valueOverTimeChart');
+            if (!ctx) return;
+            ctx.style.display = 'block';
+
+            const labels = properties.map(p => p.name || 'Unnamed');
+            const purchasePrices = properties.map(p => p.purchase_price);
+            const currentValues = properties.map(p => getPropertyValue(p));
+
+            if (charts.valueOverTime) charts.valueOverTime.destroy();
+
+            charts.valueOverTime = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Purchase Price',
+                            data: purchasePrices,
+                            borderColor: '#94a3b8',
+                            backgroundColor: 'rgba(148, 163, 184, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#94a3b8',
+                        },
+                        {
+                            label: 'Predicted Current Value',
+                            data: currentValues,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            pointBackgroundColor: '#10b981',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: 'var(--text-muted)',
+                                font: { size: 12, weight: '500' },
+                                padding: 15,
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'var(--primary)',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ₹' + context.parsed.y.toFixed(2) + 'L';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'var(--text-muted)',
+                                callback: function(value) {
+                                    return '₹' + value.toFixed(0) + 'L';
+                                }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: {
+                            ticks: { color: 'var(--text-muted)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 2: Profit/Loss Comparison
+        function renderProfitLossChart(properties) {
+            const ctx = document.getElementById('profitLossChart');
+            if (!ctx) return;
+            ctx.style.display = 'block';
+
+            const labels = properties.map(p => p.name || 'Unnamed');
+            const profitLoss = properties.map(p => {
+                const currentValue = getPropertyValue(p);
+                return currentValue - p.purchase_price;
+            });
+
+            const colors = profitLoss.map(val => val >= 0 ? '#10b981' : '#ef4444');
+
+            if (charts.profitLoss) charts.profitLoss.destroy();
+
+            charts.profitLoss = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Profit/Loss (₹L)',
+                        data: profitLoss,
+                        backgroundColor: colors,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'var(--primary)',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.x;
+                                    return 'Profit/Loss: ₹' + value.toFixed(2) + 'L';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: 'var(--text-muted)',
+                                callback: function(value) {
+                                    return '₹' + value.toFixed(0) + 'L';
+                                }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y: {
+                            ticks: { color: 'var(--text-muted)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 3: Portfolio Distribution
+        function renderPortfolioDistributionChart(properties) {
+            const ctx = document.getElementById('portfolioDistributionChart');
+            if (!ctx) return;
+            ctx.style.display = 'block';
+
+            const typeCount = {};
+            properties.forEach(p => {
+                typeCount[p.type] = (typeCount[p.type] || 0) + 1;
+            });
+
+            const labels = Object.keys(typeCount);
+            const data = Object.values(typeCount);
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
+
+            if (charts.portfolioDistribution) charts.portfolioDistribution.destroy();
+
+            charts.portfolioDistribution = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderColor: 'var(--card-bg)',
+                        borderWidth: 2,
+                        padding: 10,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'var(--text-muted)',
+                                font: { size: 12, weight: '500' },
+                                padding: 15,
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'var(--primary)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 4: Price by Location
+        function renderPriceByLocationChart(properties) {
+            const ctx = document.getElementById('priceByLocationChart');
+            if (!ctx) return;
+            ctx.style.display = 'block';
+
+            const locationData = {};
+            properties.forEach(p => {
+                const pricePerSqft = getPropertyValue(p) / p.area_sqft;
+                if (!locationData[p.city]) {
+                    locationData[p.city] = [];
+                }
+                locationData[p.city].push(pricePerSqft);
+            });
+
+            const labels = Object.keys(locationData);
+            const avgPrices = labels.map(city => {
+                const prices = locationData[city];
+                return prices.reduce((a, b) => a + b, 0) / prices.length;
+            });
+
+            if (charts.priceByLocation) charts.priceByLocation.destroy();
+
+            charts.priceByLocation = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Avg Price Per Sq.Ft (₹L)',
+                        data: avgPrices,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            borderColor: 'var(--primary)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Avg Price: ₹' + context.parsed.y.toFixed(4) + 'L/sq.ft';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'var(--text-muted)',
+                                callback: function(value) {
+                                    return '₹' + value.toFixed(2) + 'L';
+                                }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        x: {
+                            ticks: { color: 'var(--text-muted)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Insights
+        function updateInsights(properties) {
+            let totalInvestment = 0;
+            let totalValue = 0;
+            let bestProperty = { name: '-', percentage: -Infinity };
+            const locationValues = {};
+
+            properties.forEach(p => {
+                const currentValue = getPropertyValue(p);
+                totalInvestment += p.purchase_price;
+                totalValue += currentValue;
+
+                const profitPct = ((currentValue - p.purchase_price) / p.purchase_price) * 100;
+                if (profitPct > bestProperty.percentage) {
+                    bestProperty = { name: p.name || 'Unnamed', percentage: profitPct };
+                }
+
+                if (!locationValues[p.city]) {
+                    locationValues[p.city] = 0;
+                }
+                locationValues[p.city] += currentValue;
+            });
+
+            const totalProfit = totalValue - totalInvestment;
+            const profitPercentage = (totalProfit / totalInvestment * 100).toFixed(1);
+
+            // Find most valuable location
+            let mostValuableLocation = '-';
+            let maxValue = 0;
+            Object.entries(locationValues).forEach(([city, value]) => {
+                if (value > maxValue) {
+                    maxValue = value;
+                    mostValuableLocation = city;
+                }
+            });
+
+            document.getElementById('insight-count').textContent = properties.length;
+            document.getElementById('insight-investment').textContent = '₹' + totalInvestment.toFixed(1) + 'L';
+            document.getElementById('insight-value').textContent = '₹' + totalValue.toFixed(1) + 'L';
+            document.getElementById('insight-profit').textContent = '₹' + totalProfit.toFixed(1) + 'L';
+            document.getElementById('insight-profit-pct').textContent = (totalProfit >= 0 ? '↑ ' : '↓ ') + Math.abs(profitPercentage) + '%';
+            document.getElementById('insight-best').textContent = bestProperty.name;
+            document.getElementById('insight-best-pct').textContent = (bestProperty.percentage >= 0 ? '↑ ' : '↓ ') + bestProperty.percentage.toFixed(1) + '%';
+            document.getElementById('insight-location').textContent = mostValuableLocation;
+            document.getElementById('insight-location-value').textContent = '₹' + maxValue.toFixed(1) + 'L';
+
+            // Update insight card color
+            const profitInsight = document.getElementById('profit-insight');
+            if (totalProfit >= 0) {
+                profitInsight.classList.add('positive');
+                profitInsight.classList.remove('negative');
+                document.getElementById('insight-profit-pct').classList.add('positive');
+                document.getElementById('insight-profit-pct').classList.remove('negative');
+            } else {
+                profitInsight.classList.remove('positive');
+                profitInsight.classList.add('negative');
+                document.getElementById('insight-profit-pct').classList.remove('positive');
+                document.getElementById('insight-profit-pct').classList.add('negative');
+            }
+        }
+    </script>
+</body>
+</html>

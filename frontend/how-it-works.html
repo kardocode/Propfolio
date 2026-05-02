@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estato | How It Works</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="navbar">
+        <a href="index.html" class="logo">
+            <span class="logo-icon">🏢</span> Estato
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="compare.html">Compare</a>
+            <a href="heatmap.html">Heatmap</a>
+            <a href="trends.html">Trends</a>
+            <a href="insights.html">Insights</a>
+            <a href="how-it-works.html" class="active">How it Works</a>
+        </nav>
+        <div class="nav-actions">
+            <button class="btn btn-outline" style="padding: 0.5rem 1rem;">Sign In</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="hero-split" style="min-height: 250px; margin-bottom: 2rem;">
+            <div class="hero-text">
+                <h1 class="hero-title">How It <span class="text-primary">Works</span></h1>
+                <p class="hero-subtitle">Discover the machine learning architecture powering our real estate predictions.</p>
+            </div>
+            <div class="hero-3d" style="height: 250px;">
+                <canvas id="canvas3d"></canvas>
+            </div>
+        </div>
+
+        <div style="max-width: 800px; margin: 0 auto; line-height: 1.8; color: var(--text-muted);">
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2 style="color:var(--text-main); margin-bottom: 1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="color:var(--primary);">1.</span> Overview
+                </h2>
+                <p>The Estato AI system leverages advanced Machine Learning (ML) pipelines to predict real estate prices accurately. By analyzing historical housing data, geolocation metrics, and structural property details, our model eliminates guesswork from property valuation.</p>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2 style="color:var(--text-main); margin-bottom: 1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="color:var(--primary);">2.</span> Data Processing
+                </h2>
+                <ul style="margin-left: 1.5rem;">
+                    <li><b>Data Cleaning:</b> Handling missing values using median imputation.</li>
+                    <li><b>Outlier Removal:</b> Detecting anomalous pricing via Z-score analysis.</li>
+                    <li><b>Categorical Encoding:</b> Converting string data (e.g., 'Apartment', 'Villa') into mathematical formats.</li>
+                </ul>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2 style="color:var(--text-main); margin-bottom: 1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="color:var(--primary);">3.</span> Feature Engineering
+                </h2>
+                <p>We generate powerful derived features before prediction:</p>
+                <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                    <li><b>Property Features:</b> Base area, BHK count, and calculated Area Per Room.</li>
+                    <li><b>Amenities Score:</b> Weighting premium facilities (Gym, Pool, Security).</li>
+                    <li><b>Geospatial Clusters:</b> Calculating proximity to city centers, transport, and hospitals.</li>
+                </ul>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2 style="color:var(--text-main); margin-bottom: 1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="color:var(--primary);">4.</span> Model Training
+                </h2>
+                <p>Our backend Python system utilizes an ensemble approach, relying heavily on <b>XGBoost</b> and <b>Random Forest Regressors</b>. These algorithms handle non-linear relationships in real estate markets better than standard Linear Regression.</p>
+            </div>
+
+            <div class="card" style="margin-bottom: 2rem;">
+                <h2 style="color:var(--text-main); margin-bottom: 1rem; display:flex; align-items:center; gap:0.5rem;">
+                    <span style="color:var(--primary);">5.</span> Accuracy & Limitations
+                </h2>
+                <p><b>Metrics:</b> The system continuously tracks RMSE (Root Mean Squared Error) and R² Score to ensure predictions stay accurate against current market values.</p>
+                <div style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger); padding: 1rem; margin-top: 1rem; border-radius: 4px;">
+                    <p style="color: var(--text-main); margin: 0;"><b>Limitations:</b> Predictions rely heavily on the quality of historical data. Sudden market crashes, regulatory changes, or undocumented property damage cannot be factored into these baseline predictions.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" style="margin-top: 4rem;">
+        <div class="footer-bottom">
+            &copy; 2026 Estato AI. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Spline 3D Runtime -->
+    <script type="module">
+        import { Application } from 'https://esm.sh/@splinetool/runtime';
+        const canvas = document.getElementById('canvas3d');
+        if (canvas) {
+            const spline = new Application(canvas);
+            spline.load('https://prod.spline.design/XjPDmd3N1NXUJgIH/scene.splinecode');
+        }
+    </script>
+</body>
+</html>
