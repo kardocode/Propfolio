@@ -1225,7 +1225,7 @@
 
             try {
                 // Fetch current value prediction from backend
-                const response = await fetch('http://localhost:8000/predict-portfolio-value', {
+                const response = await fetch('/api/predict-portfolio-value', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(propertyData)
